@@ -41,7 +41,7 @@ pipeline {
 
     stage('Build and Push Docker Image') {
       environment {
-        DOCKER_IMAGE = "your-dockerhub-username/django-app:${BUILD_NUMBER}"  // Image tag with Jenkins build number
+        DOCKER_IMAGE = "manuagasimani/django-app:${BUILD_NUMBER}"  // Image tag with Jenkins build number
         REGISTRY_CREDENTIALS = credentials('docker-cred')  // Docker credentials ID from Jenkins credentials store
       }
       steps {
@@ -61,8 +61,8 @@ pipeline {
         script {
           echo "Deploying application to Kubernetes"
           sh '''
-          kubectl apply -f k8s/deployment.yaml  // Apply Kubernetes deployment
-          kubectl apply -f k8s/service.yaml     // Apply Kubernetes service
+            kubectl apply -f k8s/deployment.yaml  // Apply Kubernetes deployment
+            kubectl apply -f k8s/service.yaml     // Apply Kubernetes service
           '''
         }
       }
