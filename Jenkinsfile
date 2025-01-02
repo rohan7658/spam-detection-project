@@ -2,7 +2,11 @@ pipeline {
   agent {
     docker {
       image 'python:3.9'  // Python Docker image for Django
-      args '-u root -v /var/run/docker.sock:/var/run/docker.sock' // Root user and mount Docker socket for Docker operations
+      //args '-u root -v /var/run/docker.sock:/var/run/docker.sock' // Root user and mount Docker socket for Docker operations
+      args '-u root -v /var/run/docker.sock:/var/run/docker.sock -w /workspace/Django_Pipeline'
+      //args "-u root -v /var/run/docker.sock:/var/run/docker.sock -w ${pwd()}"
+
+
     }
   }
   stages {
