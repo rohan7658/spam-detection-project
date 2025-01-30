@@ -13,7 +13,7 @@ pipeline {
       steps {
         script {
           echo "Cloning the repository"
-          git branch: 'main', url: 'https://github.com/manuCprogramming/spam-detection-project.git' 
+          git branch: 'main', url: 'https://github.com/rohan7658/spam-detection-project.git' 
         }
       }
     }
@@ -44,8 +44,8 @@ pipeline {
 
     stage('Build and Push Docker Image') {
       environment {
-        DOCKER_IMAGE = "manuagasimani/django-app:${BUILD_NUMBER}"  // Image tag with Jenkins build number
-        REGISTRY_CREDENTIALS = credentials('docker-cred')  // Docker credentials ID from Jenkins credentials store
+        DOCKER_IMAGE = "rohan1718/django-app:${BUILD_NUMBER}"  // Image tag with Jenkins build number
+        REGISTRY_CREDENTIALS = credentials('docker')  // Docker credentials ID from Jenkins credentials store
       }
       steps {
         script {
