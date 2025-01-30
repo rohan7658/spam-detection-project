@@ -52,7 +52,7 @@ pipeline {
           echo "Building Docker image"
           sh 'docker build -t ${DOCKER_IMAGE} .'  // Build Docker image for the project
           echo "Pushing Docker image to registry"
-          docker.withRegistry('https://index.docker.io/v1/', 'docker-cred') {  // Push to DockerHub
+          docker.withRegistry('https://index.docker.io/v1/', 'docker') {  // Push to DockerHub
             sh 'docker push ${DOCKER_IMAGE}'
           }
         }
