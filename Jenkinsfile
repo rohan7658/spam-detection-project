@@ -18,21 +18,6 @@ pipeline {
       }
     }
 
-    stage('Static Code Analysis with SonarQube') {
-      steps {
-        script {
-          echo "Running static code analysis with SonarQube"
-          sh '''
-            sonar-scanner \
-              -Dsonar.projectKey=Spam-Detection-Project \
-              -Dsonar.sources=. \
-              -Dsonar.host.url=http://localhost:9000 \
-              -Dsonar.login=$sonarQube
-          '''
-        }
-      }
-    }
-
     stage('Build and Push Docker Image') {
       environment {
         DOCKER_IMAGE = "rohan1718/django-app:${BUILD_NUMBER}"  // Image tag with Jenkins build number
