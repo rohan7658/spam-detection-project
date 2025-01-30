@@ -18,15 +18,6 @@ pipeline {
       }
     }
 
-    stage('Install Dependencies') {
-      steps {
-        script {
-          echo "Installing dependencies"
-          sh 'pip install -r requirements.txt'  // Install project dependencies from requirements.txt
-        }
-      }
-    }
-
     stage('Static Code Analysis with SonarQube') {
       steps {
         script {
