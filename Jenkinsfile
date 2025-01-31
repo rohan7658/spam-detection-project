@@ -8,7 +8,7 @@ pipeline {
 
   stages {
     stage('Checkout') {
-      agent { label 'any' }
+      agent any  // Use any available agent for this stage
       steps {
         script {
           echo "Cloning the repository"
@@ -29,7 +29,7 @@ pipeline {
           // Normalize the path for Windows
           def workspaceDir = "${env.WORKSPACE}".replace('\\', '/')
           echo "Normalized workspace path: ${workspaceDir}"
-          
+
           echo "Installing dependencies"
           sh 'pip install -r requirements.txt'
 
