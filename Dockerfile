@@ -17,4 +17,4 @@ COPY . /app/
 EXPOSE 8000
 
 # Default command to run the Django development server
-CMD ["python", "Spam Detection/manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "Spam Project/manage.py", "runserver", "0.0.0.0:8000"]
