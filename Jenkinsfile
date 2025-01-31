@@ -3,7 +3,7 @@ pipeline {
 
   environment {
     DOCKER_IMAGE = "python:3.9"
-    REGISTRY_CREDENTIALS = credentials('docker-cred')
+    REGISTRY_CREDENTIALS = credentials('docker')
   }
 
   stages {
@@ -55,7 +55,7 @@ pipeline {
           sh 'docker build -t ${DOCKER_IMAGE} .'
 
           echo "Pushing Docker image to registry"
-          docker.withRegistry('https://index.docker.io/v1/', 'docker-cred') {
+          docker.withRegistry('https://index.docker.io/v1/', 'docker') {
             sh 'docker push ${DOCKER_IMAGE}'
           }
         }
