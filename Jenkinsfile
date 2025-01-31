@@ -31,7 +31,7 @@ pipeline {
                     -Dsonar.projectKey=Spam-Detection-Project ^
                     -Dsonar.sources=/usr/src ^
                     -Dsonar.host.url=http://host.docker.internal:9000 ^
-                    -Dsonar.login=%sonarQube%
+                    -Dsonar.login=%sonarQ%
                 '''
         }
       }
