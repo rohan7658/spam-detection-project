@@ -1,82 +1,74 @@
 pipeline {
-  agent none
-
-  environment {
-    DOCKER_IMAGE = "python:3.9"
-    REGISTRY_CREDENTIALS = credentials('docker')
+  agent {
+    docker {
+      image 'python:3.9'  // Python Docker image for Django
+      args '--user root'  // Running as root to avoid permission issues
+    }
   }
 
   stages {
     stage('Checkout') {
-      agent any  // Use any available agent for this stage
       steps {
         script {
           echo "Cloning the repository"
-          git branch: 'main', url: 'https://github.com/manuCprogramming/spam-detection-project.git'
+          git branch: 'main', url: 'https://github.com/manuCprogramming/spam-detection-project.git' 
         }
       }
     }
 
-    stage('Build and Test') {
-      agent {
-        docker {
-          image "${DOCKER_IMAGE}"
-          args "-v ${env.WORKSPACE}:${env.WORKSPACE}"  // Ensure volume mount uses the correct absolute path
-        }
-      }
+    stage('Install Dependencies') {
       steps {
         script {
-          // Normalize the path for Windows
-          def workspaceDir = "${env.WORKSPACE}".replace('\\', '/')
-          echo "Normalized workspace path: ${workspaceDir}"
-
           echo "Installing dependencies"
-          sh 'pip install -r requirements.txt'
-
-          echo "Running tests"
-          sh 'pytest tests/'
+          pwsh 'pip install -r requirements.txt'  // Using PowerShell for pip installation
         }
       }
     }
 
-    stage('Build Docker Image') {
-      agent {
-        docker {
-          image "${DOCKER_IMAGE}"
-          args "-v ${env.WORKSPACE}:${env.WORKSPACE}"
+    stage('Static Code Analysis with SonarQube') {
+      steps {
+        script {
+          echo "Running static code analysis with SonarQube"
+          pwsh '''
+            sonar-scanner `
+              -Dsonar.projectKey=Spam-Detection-Project `
+              -Dsonar.sources=. `
+              -Dsonar.host.url=http://localhost:9000 `
+              -Dsonar.login=$Env:sonarQube
+          '''
         }
+      }
+    }
+
+    stage('Build and Push Docker Image') {
+      environment {
+        DOCKER_IMAGE = "manuagasimani/django-app:${BUILD_NUMBER}"  // Image tag with Jenkins build number
+        REGISTRY_CREDENTIALS = credentials('docker')  // Docker credentials ID from Jenkins credentials store
       }
       steps {
         script {
-          def workspaceDir = "${env.WORKSPACE}".replace('\\', '/')
-          echo "Normalized workspace path for docker build: ${workspaceDir}"
-
           echo "Building Docker image"
-          sh 'docker build -t ${DOCKER_IMAGE} .'
-
-          echo "Pushing Docker image to registry"
-          docker.withRegistry('https://index.docker.io/v1/', 'docker') {
-            sh 'docker push ${DOCKER_IMAGE}'
-          }
+          pwsh '''
+            docker build -t ${Env:DOCKER_IMAGE} .
+          '''
+          echo "Tagging and pushing Docker image"
+          pwsh '''
+            docker tag ${Env:DOCKER_IMAGE} manuagasimani/django-app:${Env:BUILD_NUMBER}
+            docker login -u "$Env:REGISTRY_CREDENTIALS_USR" -p "$Env:REGISTRY_CREDENTIALS_PSW"
+            docker push manuagasimani/django-app:${Env:BUILD_NUMBER}
+          '''
         }
       }
     }
 
-    stage('Deploy') {
-      agent {
-        docker {
-          image "${DOCKER_IMAGE}"
-          args "-v ${env.WORKSPACE}:${env.WORKSPACE}"
-        }
-      }
+    stage('Deploy Application') {
       steps {
         script {
-          def workspaceDir = "${env.WORKSPACE}".replace('\\', '/')
-          echo "Normalized workspace path for kubectl deploy: ${workspaceDir}"
-
-          echo "Deploying to Kubernetes"
-          sh 'kubectl apply -f k8s/deployment.yaml'
-          sh 'kubectl apply -f k8s/service.yaml'
+          echo "Deploying application to Kubernetes"
+          pwsh '''
+            kubectl apply -f k8s/deployment.yaml
+            kubectl apply -f k8s/service.yaml
+          '''
         }
       }
     }
