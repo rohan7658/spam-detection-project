@@ -24,13 +24,15 @@ pipeline {
       steps {
         script {
           echo "Running static code analysis with SonarQube"
-          bat '''
-            sonar-scanner ^
-              -Dsonar.projectKey=Spam-Detection-Project ^
-              -Dsonar.sources=. ^
-              -Dsonar.host.url=http://localhost:9000 ^
-              -Dsonar.login=%sonarQube%
-          '''
+          sh '''
+                docker run --rm \
+                  -v $(pwd):/usr/src \
+                  sonarsource/sonar-scanner-cli:latest \
+                  -Dsonar.projectKey=Spam-Detection-Project \
+                  -Dsonar.sources=/usr/src \
+                  -Dsonar.host.url=http://host.docker.internal:9000 \
+                  -Dsonar.login=$sonarQube
+            '''
         }
       }
     }
