@@ -4,7 +4,7 @@ pipeline {
   environment {
     DOCKER_IMAGE = "python:3.9"
     REGISTRY_CREDENTIALS = credentials('docker-cred')
-    WORKSPACE_DIR = "${WORKSPACE.replace('\\', '/')" }  // Normalize path for Windows
+    WORKSPACE_DIR = "${WORKSPACE.replace('\\', '/')" } 
   }
 
   stages {
