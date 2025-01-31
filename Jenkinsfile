@@ -50,7 +50,8 @@ pipeline {
           '''
           echo "Pushing Docker image to registry"
           bat '''
-            docker login -u "%REGISTRY_CREDENTIALS_USR%" -p "%REGISTRY_CREDENTIALS_PSW%"
+            echo ${REGISTRY_CREDENTIALS_PSW} | docker login -u "${REGISTRY_CREDENTIALS_USR}" --password-stdin
+            
             docker push %DOCKER_IMAGE%
           '''
         }
