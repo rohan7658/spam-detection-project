@@ -8,7 +8,7 @@ pipeline {
 
   stages {
     stage('Checkout') {
-      agent { label 'docker' }
+      agent { label 'any' }
       steps {
         script {
           echo "Cloning the repository"
