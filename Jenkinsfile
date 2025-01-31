@@ -1,19 +1,19 @@
 pipeline {
   agent {
     docker {
-      image 'python:3.9'  // Python Docker image for Django
-      //args '-u root -v /var/run/docker.sock:/var/run/docker.sock' // Root user and mount Docker socket for Docker operations
-     
-
-
+      image 'python:3.9'  // Use Python Docker image for the entire pipeline
     }
+  }
+  environment {
+    DOCKER_IMAGE = "manuagasimani/django-app:${BUILD_NUMBER}"  // Image tag with Jenkins build number
+    REGISTRY_CREDENTIALS = credentials('docker-cred')  // Docker credentials from Jenkins credentials store
   }
   stages {
     stage('Checkout') {
       steps {
         script {
           echo "Cloning the repository"
-          git branch: 'main', url: 'https://github.com/manuCprogramming/spam-detection-project.git' 
+          git branch: 'main', url: 'https://github.com/manuCprogramming/spam-detection-project.git'
         }
       }
     }
@@ -22,7 +22,7 @@ pipeline {
       steps {
         script {
           echo "Installing dependencies"
-          sh 'pip install -r requirements.txt'  // Install project dependencies from requirements.txt
+          sh 'pip install -r requirements.txt'  // Install dependencies from requirements.txt
         }
       }
     }
@@ -43,10 +43,6 @@ pipeline {
     }
 
     stage('Build and Push Docker Image') {
-      environment {
-        DOCKER_IMAGE = "manuagasimani/django-app:${BUILD_NUMBER}"  // Image tag with Jenkins build number
-        REGISTRY_CREDENTIALS = credentials('docker-cred')  // Docker credentials ID from Jenkins credentials store
-      }
       steps {
         script {
           echo "Building Docker image"
