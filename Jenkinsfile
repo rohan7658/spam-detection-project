@@ -1,15 +1,15 @@
 pipeline {
-  agent {
-    docker {
-      image 'python:3.9'  // Use Python Docker image for the entire pipeline
-    }
-  }
+  agent none
+
   environment {
-    DOCKER_IMAGE = "manuagasimani/django-app:${BUILD_NUMBER}"  // Image tag with Jenkins build number
-    REGISTRY_CREDENTIALS = credentials('docker-cred')  // Docker credentials from Jenkins credentials store
+    DOCKER_IMAGE = "python:3.9"
+    REGISTRY_CREDENTIALS = credentials('docker-cred')
+    WORKSPACE_DIR = "${WORKSPACE.replace('\\', '/')" }  // Normalize path for Windows
   }
+
   stages {
     stage('Checkout') {
+      agent { label 'docker' }
       steps {
         script {
           echo "Cloning the repository"
@@ -18,51 +18,56 @@ pipeline {
       }
     }
 
-    stage('Install Dependencies') {
+    stage('Build and Test') {
+      agent {
+        docker {
+          image "${DOCKER_IMAGE}"
+          args "-v ${WORKSPACE_DIR}:${WORKSPACE_DIR}"  // Ensure volume mount uses the correct absolute path
+        }
+      }
       steps {
         script {
           echo "Installing dependencies"
-          sh 'pip install -r requirements.txt'  // Install dependencies from requirements.txt
+          sh 'pip install -r requirements.txt'
+
+          echo "Running tests"
+          sh 'pytest tests/'
         }
       }
     }
 
-    stage('Static Code Analysis with SonarQube') {
-      steps {
-        script {
-          echo "Running static code analysis with SonarQube"
-          sh '''
-            sonar-scanner \
-              -Dsonar.projectKey=Spam-Detection-Project \
-              -Dsonar.sources=. \
-              -Dsonar.host.url=http://localhost:9000 \
-              -Dsonar.login=$sonarQube
-          '''
+    stage('Build Docker Image') {
+      agent {
+        docker {
+          image "${DOCKER_IMAGE}"
+          args "-v ${WORKSPACE_DIR}:${WORKSPACE_DIR}"
         }
       }
-    }
-
-    stage('Build and Push Docker Image') {
       steps {
         script {
           echo "Building Docker image"
-          sh 'docker build -t ${DOCKER_IMAGE} .'  // Build Docker image for the project
+          sh 'docker build -t ${DOCKER_IMAGE} .'
+
           echo "Pushing Docker image to registry"
-          docker.withRegistry('https://index.docker.io/v1/', 'docker-cred') {  // Push to DockerHub
+          docker.withRegistry('https://index.docker.io/v1/', 'docker-cred') {
             sh 'docker push ${DOCKER_IMAGE}'
           }
         }
       }
     }
 
-    stage('Deploy Application') {
+    stage('Deploy') {
+      agent {
+        docker {
+          image "${DOCKER_IMAGE}"
+          args "-v ${WORKSPACE_DIR}:${WORKSPACE_DIR}"
+        }
+      }
       steps {
         script {
-          echo "Deploying application to Kubernetes"
-          sh '''
-            kubectl apply -f k8s/deployment.yaml  // Apply Kubernetes deployment
-            kubectl apply -f k8s/service.yaml     // Apply Kubernetes service
-          '''
+          echo "Deploying to Kubernetes"
+          sh 'kubectl apply -f k8s/deployment.yaml'
+          sh 'kubectl apply -f k8s/service.yaml'
         }
       }
     }
