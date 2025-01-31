@@ -4,7 +4,6 @@ pipeline {
   environment {
     DOCKER_IMAGE = "python:3.9"
     REGISTRY_CREDENTIALS = credentials('docker-cred')
-    WORKSPACE_DIR = "${WORKSPACE.replace('\\', '/')" } 
   }
 
   stages {
@@ -22,11 +21,15 @@ pipeline {
       agent {
         docker {
           image "${DOCKER_IMAGE}"
-          args "-v ${WORKSPACE_DIR}:${WORKSPACE_DIR}"  // Ensure volume mount uses the correct absolute path
+          args "-v ${env.WORKSPACE}:${env.WORKSPACE}"  // Ensure volume mount uses the correct absolute path
         }
       }
       steps {
         script {
+          // Normalize the path for Windows
+          def workspaceDir = "${env.WORKSPACE}".replace('\\', '/')
+          echo "Normalized workspace path: ${workspaceDir}"
+          
           echo "Installing dependencies"
           sh 'pip install -r requirements.txt'
 
@@ -40,11 +43,14 @@ pipeline {
       agent {
         docker {
           image "${DOCKER_IMAGE}"
-          args "-v ${WORKSPACE_DIR}:${WORKSPACE_DIR}"
+          args "-v ${env.WORKSPACE}:${env.WORKSPACE}"
         }
       }
       steps {
         script {
+          def workspaceDir = "${env.WORKSPACE}".replace('\\', '/')
+          echo "Normalized workspace path for docker build: ${workspaceDir}"
+
           echo "Building Docker image"
           sh 'docker build -t ${DOCKER_IMAGE} .'
 
@@ -60,11 +66,14 @@ pipeline {
       agent {
         docker {
           image "${DOCKER_IMAGE}"
-          args "-v ${WORKSPACE_DIR}:${WORKSPACE_DIR}"
+          args "-v ${env.WORKSPACE}:${env.WORKSPACE}"
         }
       }
       steps {
         script {
+          def workspaceDir = "${env.WORKSPACE}".replace('\\', '/')
+          echo "Normalized workspace path for kubectl deploy: ${workspaceDir}"
+
           echo "Deploying to Kubernetes"
           sh 'kubectl apply -f k8s/deployment.yaml'
           sh 'kubectl apply -f k8s/service.yaml'
