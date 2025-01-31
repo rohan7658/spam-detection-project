@@ -1,10 +1,5 @@
 pipeline {
-  agent {
-    docker {
-      image 'python:3.9'  // Python Docker image for Django
-      args '--user root'  // Running as root to avoid permission issues
-    }
-  }
+  agent any  // Run directly on the Jenkins host machine
 
   stages {
     stage('Checkout') {
@@ -20,7 +15,7 @@ pipeline {
       steps {
         script {
           echo "Installing dependencies"
-          pwsh 'pip install -r requirements.txt'  // Using PowerShell for pip installation
+          bat 'pip install -r requirements.txt'  // Windows batch command
         }
       }
     }
@@ -29,12 +24,12 @@ pipeline {
       steps {
         script {
           echo "Running static code analysis with SonarQube"
-          pwsh '''
-            sonar-scanner `
-              -Dsonar.projectKey=Spam-Detection-Project `
-              -Dsonar.sources=. `
-              -Dsonar.host.url=http://localhost:9000 `
-              -Dsonar.login=$Env:sonarQube
+          bat '''
+            sonar-scanner ^
+              -Dsonar.projectKey=Spam-Detection-Project ^
+              -Dsonar.sources=. ^
+              -Dsonar.host.url=http://localhost:9000 ^
+              -Dsonar.login=%sonarQube%
           '''
         }
       }
@@ -42,20 +37,19 @@ pipeline {
 
     stage('Build and Push Docker Image') {
       environment {
-        DOCKER_IMAGE = "manuagasimani/django-app:${BUILD_NUMBER}"  // Image tag with Jenkins build number
-        REGISTRY_CREDENTIALS = credentials('docker')  // Docker credentials ID from Jenkins credentials store
+        DOCKER_IMAGE = "manuagasimani/django-app:%BUILD_NUMBER%"  // Image tag with Jenkins build number
+        REGISTRY_CREDENTIALS = credentials('docker-cred')  // Docker credentials from Jenkins
       }
       steps {
         script {
           echo "Building Docker image"
-          pwsh '''
-            docker build -t ${Env:DOCKER_IMAGE} .
+          bat '''
+            docker build -t %DOCKER_IMAGE% .
           '''
-          echo "Tagging and pushing Docker image"
-          pwsh '''
-            docker tag ${Env:DOCKER_IMAGE} manuagasimani/django-app:${Env:BUILD_NUMBER}
-            docker login -u "$Env:REGISTRY_CREDENTIALS_USR" -p "$Env:REGISTRY_CREDENTIALS_PSW"
-            docker push manuagasimani/django-app:${Env:BUILD_NUMBER}
+          echo "Pushing Docker image to registry"
+          bat '''
+            docker login -u "%REGISTRY_CREDENTIALS_USR%" -p "%REGISTRY_CREDENTIALS_PSW%"
+            docker push %DOCKER_IMAGE%
           '''
         }
       }
@@ -65,7 +59,7 @@ pipeline {
       steps {
         script {
           echo "Deploying application to Kubernetes"
-          pwsh '''
+          bat '''
             kubectl apply -f k8s/deployment.yaml
             kubectl apply -f k8s/service.yaml
           '''
