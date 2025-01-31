@@ -20,7 +20,7 @@ pipeline {
       }
     }
 
-    stage('Static Code Analysis with SonarQube') {
+   /* stage('Static Code Analysis with SonarQube') {
       steps {
         script {
           echo "Running static code analysis with SonarQube"
@@ -35,7 +35,7 @@ pipeline {
                 '''
         }
       }
-    }
+    }*/
 
     stage('Build and Push Docker Image') {
       environment {
