@@ -38,7 +38,7 @@ pipeline {
     stage('Build and Push Docker Image') {
       environment {
         DOCKER_IMAGE = "manuagasimani/django-app:%BUILD_NUMBER%"  // Image tag with Jenkins build number
-        REGISTRY_CREDENTIALS = credentials('docker-cred')  // Docker credentials from Jenkins
+        REGISTRY_CREDENTIALS = credentials('docker')  // Docker credentials from Jenkins
       }
       steps {
         script {
