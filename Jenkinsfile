@@ -44,6 +44,10 @@ pipeline {
       }
       steps {
         script {
+           echo "Logging into Docker Hub"
+            bat '''
+                docker login -u "%REGISTRY_CREDENTIALS_USR%" -p "%REGISTRY_CREDENTIALS_PSW%"
+            '''
           echo "Building Docker image"
           bat '''
             docker build -t %DOCKER_IMAGE% .
