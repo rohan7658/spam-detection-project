@@ -15,6 +15,7 @@ pipeline {
       steps {
         script {
           echo "Installing dependencies"
+          
           bat 'pip install -r requirements.txt'  // Windows batch command
         }
       }
@@ -66,10 +67,15 @@ pipeline {
       steps {
         script {
           echo "Deploying application to Kubernetes"
-          bat '''
-            kubectl apply -f k8s/deployment.yaml
-            kubectl apply -f k8s/service.yaml
-          '''
+           withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                        // Run the kubectl commands
+                        bat '''
+                            kubectl apply -f k8s/deployment.yaml
+                            kubectl apply -f k8s/service.yaml
+                        '''
+                    }
+         
+          
         }
       }
     }
