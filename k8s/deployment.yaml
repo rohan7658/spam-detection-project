@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: spam-detection
-        image: manuagasimani/django-app:latest  # Docker image to use
+        image: manuagasimani/django-app:latest
         ports:
         - containerPort: 8000
         env:
