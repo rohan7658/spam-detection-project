@@ -19,11 +19,6 @@ spec:
         image: manuagasimani/django-app:latest
         ports:
         - containerPort: 8000
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: db-secret
-              key: url
+        
         # Add any additional environment variables, such as database credentials
  
