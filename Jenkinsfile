@@ -1,48 +1,39 @@
 pipeline {
-  agent {
-    docker {
-      image 'python:3.9'  // Python Docker image for Django
-      //args '-u root -v /var/run/docker.sock:/var/run/docker.sock' // Root user and mount Docker socket for Docker operations
-     
+  agent any  // Run directly on the Jenkins host machine
 
-
-    }
-  }
   stages {
     stage('Checkout') {
       steps {
         script {
           echo "Cloning the repository"
-          git branch: 'main', url: 'https://github.com/rohan7658/spam-detection-project.git' 
+          git branch: 'main', url: 'https://github.com/manuCprogramming/spam-detection-project.git' 
         }
       }
     }
 
-    stage('Build and Push Docker Image') {
-      environment {
-        DOCKER_IMAGE = "rohan1718/django-app:${BUILD_NUMBER}"  // Image tag with Jenkins build number
-        REGISTRY_CREDENTIALS = credentials('docker')  // Docker credentials ID from Jenkins credentials store
-      }
+    stage('Install Dependencies') {
       steps {
         script {
-          echo "Building Docker image"
-          sh 'docker build -t ${DOCKER_IMAGE} .'  // Build Docker image for the project
-          echo "Pushing Docker image to registry"
-          docker.withRegistry('https://index.docker.io/v1/', 'docker') {  // Push to DockerHub
-            sh 'docker push ${DOCKER_IMAGE}'
-          }
+          echo "Installing dependencies"
+          
+          bat 'pip install -r requirements.txt'  // Windows batch command
         }
       }
     }
 
-    stage('Deploy Application') {
+    stage('Static Code Analysis with SonarQube') {
       steps {
         script {
-          echo "Deploying application to Kubernetes"
-          sh '''
-            kubectl apply -f k8s/deployment.yaml  // Apply Kubernetes deployment
-            kubectl apply -f k8s/service.yaml     // Apply Kubernetes service
-          '''
+          echo "Running static code analysis with SonarQube"
+         bat '''
+                    docker run --rm ^
+                    -v %CD%:/usr/src ^
+                    sonarsource/sonar-scanner-cli:latest ^
+                    -Dsonar.projectKey=Spam-Detection-Project ^
+                    -Dsonar.sources=/usr/src ^
+                    -Dsonar.host.url=http://host.docker.internal:9000 ^
+                    -Dsonar.login=%sonarQ%
+                '''
         }
       }
     }
